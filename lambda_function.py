@@ -5,7 +5,7 @@ import boto3
 from urllib.parse import unquote_plus
 
 # Criando cliente SNS
-sns_client = boto3.client("sns", endpoint_url="http://localhost:4566", region_name="us-east-1")
+sns_client = boto3.client("sns")
 
 SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:000000000000:transcription-topic"
 

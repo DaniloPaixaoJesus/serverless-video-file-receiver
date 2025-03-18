@@ -102,13 +102,4 @@ if [ $? -ne 0 ]; then
 fi
 
 
-echo "Adicionando permissão para a Lambda publicar no SNS..."
-awslocal lambda add-permission \
-    --function-name receiveVideoFile \
-    --principal sns.amazonaws.com \
-    --statement-id allow-lambda-sns \
-    --action "lambda:InvokeFunction" \
-    --source-arn $TOPIC_ARN
-
-
 echo "Configuração concluída com sucesso."

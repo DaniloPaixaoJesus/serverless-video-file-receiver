@@ -116,3 +116,21 @@ Caso você tenha assinado uma fila SQS, veja se a mensagem chegou:
 aws --endpoint-url=http://localhost:4566 sqs receive-message \
     --queue-url http://localhost:4566/000000000000/transcription-queue
 ```
+
+
+
+## 📂 Chamada direto no tópico SNS após recebimento do lambda
+
+```sh
+aws --endpoint-url=http://localhost:4566 sns publish \
+    --topic-arn arn:aws:sns:us-east-1:000000000000:transcription-topic \
+    --message '{
+        "bucket-name": "transcription-bucket",
+        "bucket-key": "video-download-from-front-end/test.mp4",
+        "file-name": "test.mp4",
+        "size": 12345,
+        "event-time": "2025-03-18T12:00:00Z",
+        "transaction-id": "123e4567-e89b-12d3-a456-426614174000"
+    }' \
+    --subject "Novo Arquivo Recebido"
+```
