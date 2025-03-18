@@ -25,19 +25,27 @@ awslocal s3api put-bucket-cors --bucket transcription-bucket --cors-configuratio
 echo "Criando o tópico SNS..."
 awslocal sns create-topic --name transcription-topic
 
-# Empacota a função Lambda
-echo "Empacotando a função Lambda..."
-zip /docker-entrypoint-initaws.d/lambda_function.zip /docker-entrypoint-initaws.d/lambda_function.py
+echo "Verificando a existência do arquivo lambda_function.py..."
+ls -lah /docker-entrypoint-initaws.d/
 
-# Verifica se o arquivo ZIP foi criado
-if [ ! -f /docker-entrypoint-initaws.d/lambda_function.zip ]; then
-  echo "Erro ao criar o arquivo ZIP da função Lambda."
+
+echo "Empacotando a função Lambda..."
+cd /docker-entrypoint-initaws.d || exit 1
+#zip lambda_function.zip lambda_function.py
+zip -r /docker-entrypoint-initaws.d/lambda_function.zip lambda_function.py
+
+
+# Verifica se o arquivo foi criado
+if [ ! -f lambda_function.zip ]; then
+  echo "❌ Erro ao criar o arquivo ZIP da função Lambda."
   exit 1
 fi
 
+
 # Cria a função Lambda
 echo "Criando a função Lambda..."
-awslocal lambda create-function --function-name receiveVideoFile --zip-file fileb:///docker-entrypoint-initaws.d/lambda_function.zip --handler lambda_function.lambda_handler --runtime python3.8 --role arn:aws:iam::000000000000:role/lambda-role
+awslocal lambda create-function --function-name receiveVideoFile --zip-file fileb://lambda_function.zip --handler lambda_function.lambda_handler --runtime python3.8 --role arn:aws:iam::000000000000:role/lambda-role
+
 
 # Espera a função Lambda estar ativa
 echo "Esperando a função Lambda estar ativa..."

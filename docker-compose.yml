@@ -8,10 +8,10 @@ services:
       - "4566:4566"
       - "4571:4571"
     environment:
-      - SERVICES=s3,sns,lambda
+      - SERVICES=s3,sns,lambda,iam
       - DEBUG=1
     volumes:
-      - ./localstack:/docker-entrypoint-initaws.d
+      - ./:/docker-entrypoint-initaws.d
       - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: /bin/bash -c "docker-entrypoint.sh & /docker-entrypoint-initaws.d/setup.sh && tail -f /dev/null"
 

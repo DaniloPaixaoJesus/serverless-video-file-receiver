@@ -1,41 +1,87 @@
+# Serverless Video File Receiver
 
-event test
+Este projeto implementa uma função **serverless** que é acionada automaticamente após a chegada de um arquivo no **S3**, utilizando o **LocalStack** para emular serviços da AWS.
 
-{
-  "Records": [
-    {
-      "eventVersion": "2.1",
-      "eventSource": "aws:s3",
-      "awsRegion": "us-east-1",
-      "eventTime": "2024-05-25T22:04:17.720Z",
-      "eventName": "ObjectCreated:Put",
-      "userIdentity": {
-        "principalId": "A3RRF1OJZHFQGA"
-      },
-      "requestParameters": {
-        "sourceIPAddress": "187.107.8.125"
-      },
-      "responseElements": {
-        "x-amz-request-id": "XPCSWDPRY5NFRTBC",
-        "x-amz-id-2": "FTxjFXvUZxBgA1kA0dQp2CkV4UZmecVg8wCCTOACYxN9e5SsENo6lKKXvFFfBkDgXEL7oIZm0Y480raE1rMP+Z/uy7NA6SiS"
-      },
-      "s3": {
-        "s3SchemaVersion": "1.0",
-        "configurationId": "3f694aa9-99a4-4684-9582-f50a81ca1a60",
-        "bucket": {
-          "name": "app-transcription-bucket",
-          "ownerIdentity": {
-            "principalId": "A3RRF1OJZHFQGA"
-          },
-          "arn": "arn:aws:s3:::app-transcription-bucket"
-        },
-        "object": {
-          "key": "video-download-from-front-end2/teste1-11.mkv",
-          "size": 536932,
-          "eTag": "dfa07282ced2e7f114f926d126b73509",
-          "sequencer": "0066526061A07E5426"
-        }
-      }
-    }
-  ]
-}
+## 📌 Requisitos
+- **Docker** e **Docker Compose**
+- **AWS CLI** instalado
+- **LocalStack** configurado corretamente
+
+## 🔧 Configuração
+
+Antes de iniciar o LocalStack, configure as credenciais de teste:
+
+```sh
+aws configure set aws_access_key_id test
+aws configure set aws_secret_access_key test
+aws configure set region us-east-1
+```
+
+Garanta que o **arquivo `setup.sh` tenha permissão de execução**:
+
+```sh
+chmod +x setup.sh
+```
+
+## 🚀 Verificação dos Recursos Criados
+
+Liste os buckets S3:
+
+```sh
+aws --endpoint-url=http://localhost:4566 s3api list-buckets
+```
+
+Verifique a configuração de CORS no bucket:
+
+```sh
+aws --endpoint-url=http://localhost:4566 s3api get-bucket-cors --bucket transcription-bucket
+```
+
+Liste os tópicos SNS criados:
+
+```sh
+aws --endpoint-url=http://localhost:4566 sns list-topics --query "Topics[?contains(TopicArn, 'transcription-topic')].TopicArn" --output text
+```
+
+Liste todas as funções Lambda disponíveis:
+
+```sh
+aws --endpoint-url=http://localhost:4566 lambda list-functions --query "Functions[].FunctionName"
+```
+
+Verifique se a função Lambda `receiveVideoFile` existe:
+
+```sh
+aws --endpoint-url=http://localhost:4566 lambda list-functions --query "Functions[?FunctionName=='receiveVideoFile'].FunctionName" --output text
+```
+
+Verifique as permissões da Lambda:
+
+```sh
+aws --endpoint-url=http://localhost:4566 lambda get-policy --function-name receiveVideoFile --query "Policy" --output text
+```
+
+## 📡 Testando a Execução da Lambda
+
+Execute a Lambda manualmente:
+
+```sh
+aws --endpoint-url=http://localhost:4566 lambda invoke \
+    --function-name receiveVideoFile \
+    --payload '{ "key1": "value1", "key2": "value2" }' \
+    response.json
+```
+
+Verifique a saída:
+
+```sh
+cat response.json
+```
+
+## 📂 Teste com Upload para S3
+
+Faça o upload de um arquivo para o bucket e dispare a função Lambda automaticamente:
+
+```sh
+aws --endpoint-url=http://localhost:4566 s3 cp exemplo.mp4 s3://transcription-bucket/video-download-from-front-end/
+```
