@@ -8,12 +8,14 @@ services:
       - "4566:4566"
       - "4571:4571"
     environment:
-      - SERVICES=s3,sns,lambda,iam
+      - SERVICES=s3,sns,sqs,lambda,iam
       - DEBUG=1
     volumes:
       - ./:/docker-entrypoint-initaws.d
       - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: /bin/bash -c "docker-entrypoint.sh & /docker-entrypoint-initaws.d/setup.sh && tail -f /dev/null"
+    networks:
+      - localstack-network
 
   lambda:
     build: .
@@ -25,3 +27,10 @@ services:
     depends_on:
       - localstack
     command: ["lambda_function.lambda_handler"]
+    networks:
+      - localstack-network
+
+networks:
+  localstack-network:
+    external: true
+

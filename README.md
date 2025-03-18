@@ -9,6 +9,11 @@ Este projeto implementa uma função **serverless** que é acionada automaticame
 
 ## 🔧 Configuração
 
+Crie a rede externa no Docker para que os recursos criados no serviço LOCALSTACK seja compartilhado em diferentes docker-compose
+```sh
+docker network create localstack-network
+```
+
 Antes de iniciar o LocalStack, configure as credenciais de teste:
 
 ```sh
@@ -68,7 +73,7 @@ Execute a Lambda manualmente:
 ```sh
 aws --endpoint-url=http://localhost:4566 lambda invoke \
     --function-name receiveVideoFile \
-    --payload '{ "key1": "value1", "key2": "value2" }' \
+    --payload '{ "Records": [ { "s3": { "bucket": { "name": "transcription-bucket" }, "object": { "key": "video-download-from-front-end/test.mp4", "size": 12345 } }, "eventTime": "2025-03-18T12:00:00Z" } ] }' \
     response.json
 ```
 
@@ -84,4 +89,30 @@ Faça o upload de um arquivo para o bucket e dispare a função Lambda automatic
 
 ```sh
 aws --endpoint-url=http://localhost:4566 s3 cp exemplo.mp4 s3://transcription-bucket/video-download-from-front-end/
+```
+
+Verifique se o objeto foi carregado no bucket
+
+```sh
+aws --endpoint-url=http://localhost:4566 s3 ls s3://transcription-bucket
+aws --endpoint-url=http://localhost:4566 s3api list-objects \
+    --bucket transcription-bucket \
+    --output json
+
+```
+
+## 📂 Verifique se a mensagem foi publicada no SNS
+
+Verifique a mensagem no tópico SNS
+
+```sh
+aws --endpoint-url=http://localhost:4566 sns list-subscriptions-by-topic \
+    --topic-arn arn:aws:sns:us-east-1:000000000000:transcription-topic
+```
+
+Caso você tenha assinado uma fila SQS, veja se a mensagem chegou:
+
+```sh
+aws --endpoint-url=http://localhost:4566 sqs receive-message \
+    --queue-url http://localhost:4566/000000000000/transcription-queue
 ```
